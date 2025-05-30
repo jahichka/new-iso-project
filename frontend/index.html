@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jednostavna Web Aplikacija</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        input[type="text"], input[type="email"], textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="text"]:focus, input[type="email"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .users-list {
+            margin-top: 40px;
+            border-top: 2px solid #e1e5e9;
+            padding-top: 30px;
+        }
+
+        .user-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .user-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .user-email {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 8px;
+        }
+
+        .user-message {
+            color: #555;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .success {
+            background: #51cf66;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Jednostavna Web Aplikacija</h1>
+        
+        <form id="userForm">
+            <div class="form-group">
+                <label for="name">Ime:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Poruka:</label>
+                <textarea id="message" name="message" placeholder="Ostavite svoju poruku..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn">Dodaj Korisnika</button>
+        </form>
+
+        <div id="messageContainer"></div>
+        
+        <div class="users-list">
+            <h2 style="color: #333; margin-bottom: 20px; text-align: center;">Lista Korisnika</h2>
+            <div id="usersList">
+                <div class="loading">Učitavam korisnike...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API URL - automatska detekcija okruženja
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api'  // Lokalno pokretanje
+            : '/api';  // Docker/production okruženje
+
+        // Elementi DOM-a
+        const userForm = document.getElementById('userForm');
+        const usersList = document.getElementById('usersList');
+        const messageContainer = document.getElementById('messageContainer');
+
+        // Funkcija za prikaz poruka
+        function showMessage(message, type = 'success') {
+            messageContainer.innerHTML = `<div class="${type} fade-in">${message}</div>`;
+            setTimeout(() => {
+                messageContainer.innerHTML = '';
+            }, 3000);
+        }
+
+        // Funkcija za učitavanje korisnika
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_URL}/users`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const users = await response.json();
+                displayUsers(users);
+            } catch (error) {
+                console.error('Greška:', error);
+                usersList.innerHTML = '<div class="error">Greška prilikom učitavanja korisnika: ' + error.message + '</div>';
+            }
+        }
+
+        // Funkcija za prikaz korisnika
+        function displayUsers(users) {
+            if (users.length === 0) {
+                usersList.innerHTML = '<div class="loading">Nema korisnika za prikaz</div>';
+                return;
+            }
+
+            usersList.innerHTML = users.map(user => `
+                <div class="user-card fade-in">
+                    <div class="user-name">${escapeHtml(user.name)}</div>
+                    <div class="user-email">${escapeHtml(user.email)}</div>
+                    ${user.message ? `<div class="user-message">${escapeHtml(user.message)}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Funkcija za sigurno prikazivanje HTML-a
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Rukovanje slanjem forme
+        userForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(userForm);
+            const userData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                message: formData.get('message')
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Greška prilikom dodavanja korisnika');
+                }
+
+                const result = await response.json();
+                showMessage('Korisnik uspješno dodan!');
+                userForm.reset();
+                loadUsers(); // Osvježi listu korisnika
+                
+            } catch (error) {
+                console.error('Greška:', error);
+                showMessage('Greška: ' + error.message, 'error');
+            }
+        });
+
+        // Učitaj korisnike prilikom učitavanja stranice
+        document.addEventListener('DOMContentLoaded', loadUsers);
+
+        // Osvježi korisnike svakih 30 sekundi
+        setInterval(loadUsers, 30000);
+    </script>
+</body>
+</html>

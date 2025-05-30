@@ -1,0 +1,27 @@
+# Koristimo oficijalnu Node.js sliku
+FROM node:18-alpine
+
+# Postavimo radni direktorij
+WORKDIR /app
+
+# Kopiraj package.json iz backend direktorija
+COPY ./backend/package*.json ./
+
+# Instaliraj dependencije
+RUN npm install
+# Kopiraj source kod iz backend direktorija
+COPY ./backend/ ./
+
+# Kreiraj non-root korisnika
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Promijeni vlasništvo aplikacije
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Expose port
+EXPOSE 3000
+
+# Pokretanje aplikacije
+CMD ["node", "server.js"]
