@@ -9,8 +9,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Za serviranje statičkih fajlova
-
+app.use(express.static(path.join(__dirname, 'frontend')));
 // PostgreSQL konekcija
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
@@ -170,9 +169,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Nešto je pošlo po zlu!' });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Ruta nije pronađena' });
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
 // Pokretanje servera

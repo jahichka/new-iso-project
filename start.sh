@@ -33,20 +33,20 @@ docker run -d \
     -p 6379:6379 \
     redis:7-alpine redis-server --appendonly yes
 
-# Čekaj da baza bude spremna
-echo "⏳ Čekam da PostgreSQL bude spreman..."
-for i in {1..30}; do
-    if docker exec webapp-postgres pg_isready -U postgres -d webapp_db &> /dev/null; then
-        echo "✅ PostgreSQL je spreman"
-        break
-    fi
-    if [ $i -eq 30 ]; then
-        echo "❌ PostgreSQL se nije pokrenuo na vrijeme"
-        docker logs webapp-postgres
-        exit 1
-    fi
-    sleep 2
-done
+# # Čekaj da baza bude spremna
+# echo "⏳ Čekam da PostgreSQL bude spreman..."
+# for i in {1..30}; do
+#     if docker exec webapp-postgres pg_isready -U postgres -d webapp_db &> /dev/null; then
+#         echo "✅ PostgreSQL je spreman"
+#         break
+#     fi
+#     if [ $i -eq 30 ]; then
+#         echo "❌ PostgreSQL se nije pokrenuo na vrijeme"
+#         docker logs webapp-postgres
+#         exit 1
+#     fi
+#     sleep 2
+# done
 
 # 3. Pokreni Backend
 echo "⚙️  Pokretam Backend..."
