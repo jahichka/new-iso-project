@@ -79,13 +79,31 @@ for i in {1..20}; do
     sleep 2
 done
 
-# 4. Pokreni Frontend
+# 4. Pokreni Frontend - NAKON što je backend spreman
 echo "🌐 Pokretam Frontend..."
 docker run -d \
     --name webapp-frontend \
     --network webapp-network \
+    --link webapp-backend:backend \
     -p 80:80 \
     webapp-frontend
+
+# Čekaj da frontend bude spreman
+echo "⏳ Čekam da Frontend bude spreman..."
+sleep 10
+for i in {1..15}; do
+    if curl -f http://localhost/ &> /dev/null; then
+        echo "✅ Frontend je spreman"
+        break
+    fi
+    if [ $i -eq 15 ]; then
+        echo "❌ Frontend se nije pokrenuo na vrijeme"
+        echo "🔍 Logovi frontend kontejnera:"
+        docker logs webapp-frontend
+        exit 1
+    fi
+    sleep 3
+done
 
 # 5. Pokreni pgAdmin (opciono)
 echo "🔧 Pokretam pgAdmin..."
@@ -96,22 +114,6 @@ docker run -d \
     -e PGADMIN_DEFAULT_PASSWORD=admin123 \
     -p 8080:80 \
     dpage/pgadmin4:latest
-
-# Čekaj da frontend bude spreman
-echo "⏳ Čekam da Frontend bude spreman..."
-sleep 3
-for i in {1..15}; do
-    if curl -f http://localhost/ &> /dev/null; then
-        echo "✅ Frontend je spreman"
-        break
-    fi
-    if [ $i -eq 15 ]; then
-        echo "❌ Frontend se nije pokrenuo na vrijeme"
-        docker logs webapp-frontend
-        exit 1
-    fi
-    sleep 2
-done
 
 echo ""
 echo "🎉 Aplikacija je uspješno pokrenuta!"
