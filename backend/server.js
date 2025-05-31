@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -170,8 +169,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Nešto je pošlo po zlu!' });
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Ruta nije pronađena' });
 });
 
 // Pokretanje servera

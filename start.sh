@@ -33,20 +33,20 @@ docker run -d \
     -p 6379:6379 \
     redis:7-alpine redis-server --appendonly yes
 
-# # Čekaj da baza bude spremna
-# echo "⏳ Čekam da PostgreSQL bude spreman..."
-# for i in {1..30}; do
-#     if docker exec webapp-postgres pg_isready -U postgres -d webapp_db &> /dev/null; then
-#         echo "✅ PostgreSQL je spreman"
-#         break
-#     fi
-#     if [ $i -eq 30 ]; then
-#         echo "❌ PostgreSQL se nije pokrenuo na vrijeme"
-#         docker logs webapp-postgres
-#         exit 1
-#     fi
-#     sleep 2
-# done
+# Wait for database to be ready
+echo "⏳ Čekam da PostgreSQL bude spreman..."
+for i in {1..30}; do
+    if docker exec webapp-postgres pg_isready -U postgres -d webapp_db &> /dev/null; then
+        echo "✅ PostgreSQL je spreman"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo "❌ PostgreSQL se nije pokrenuo na vrijeme"
+        docker logs webapp-postgres
+        exit 1
+    fi
+    sleep 2
+done
 
 # 3. Pokreni Backend
 echo "⚙️  Pokretam Backend..."
@@ -63,9 +63,8 @@ docker run -d \
     -p 3000:3000 \
     webapp-backend
 
-# Čekaj da backend bude spreman
+# Wait for backend to be ready
 echo "⏳ Čekam da Backend bude spreman..."
-sleep 5
 for i in {1..20}; do
     if curl -f http://localhost:3000/health &> /dev/null; then
         echo "✅ Backend je spreman"
@@ -76,21 +75,20 @@ for i in {1..20}; do
         docker logs webapp-backend
         exit 1
     fi
-    sleep 2
+    sleep 3
 done
 
-# 4. Pokreni Frontend - NAKON što je backend spreman
+# 4. Pokreni Frontend
 echo "🌐 Pokretam Frontend..."
 docker run -d \
     --name webapp-frontend \
     --network webapp-network \
-    --link webapp-backend:backend \
+    -e BACKEND_URL=http://webapp-backend:3000 \
     -p 80:80 \
     webapp-frontend
 
-# Čekaj da frontend bude spreman
+# Wait for frontend to be ready
 echo "⏳ Čekam da Frontend bude spreman..."
-sleep 10
 for i in {1..15}; do
     if curl -f http://localhost/ &> /dev/null; then
         echo "✅ Frontend je spreman"
